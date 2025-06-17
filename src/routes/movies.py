@@ -130,14 +130,15 @@ async def get_film_by_id(movie_id: int, db: AsyncSession = Depends(get_db)):
     return film
 
 
-@router.delete("/movies/{movie_id}/")
+@router.delete("/movies/{movie_id}/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_film(movie_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(MovieModel).where(MovieModel.id == movie_id))
     film_to_delete = result.scalar_one_or_none()
     if not film_to_delete:
-        return None
+        raise HTTPException(status_code=404, detail="The movie with the specified ID does not exist.")
     await db.delete(film_to_delete)
     await db.commit()
+    return {"detail": "The movie was successfully deleted."}
 
 
 @router.patch("/movies/{movie_id}/", status_code=status.HTTP_200_OK)
@@ -145,29 +146,37 @@ async def update_movie(movie_id: int, film: UpdateMovie, db: AsyncSession = Depe
     result = await db.execute(select(MovieModel).where(MovieModel.id == movie_id))
     movie = result.scalar_one_or_none()
 
-    score_validate = True if film.score >= 0 and film.score <= 100 else False
-    budget_validate = True if film.budget >= 0 else False
-    revenue_validate = True if film.revenue >= 0 else False
+    if film.score:
+        if not film.score >= 0 and not film.score <= 100:
+            raise HTTPException(status_code=400, detail="Invalid input data.")
+
+    if film.budget:
+        if not film.budget >= 0:
+            raise HTTPException(status_code=400, detail="Invalid input data.")
+
+    if film.revenue:
+        if not film.revenue >= 0:
+            raise HTTPException(status_code=400, detail="Invalid input data.")
 
     if not movie:
         raise HTTPException(status_code=404, detail="Movie with the given ID was not found.")
 
-    if not film or not score_validate or not budget_validate or not revenue_validate:
+    if not film:
         raise HTTPException(status_code=400, detail="Invalid input data.")
 
-    if movie.name is not None:
+    if film.name is not None:
         movie.name = film.name
-    if movie.date is not None:
+    if film.date is not None:
         movie.date = film.date
-    if movie.score is not None:
+    if film.score is not None:
         movie.score = film.score
-    if movie.overview is not None:
+    if film.overview is not None:
         movie.overview = film.overview
-    if movie.status is not None:
+    if film.status is not None:
         movie.status = film.status
-    if movie.budget is not None:
+    if film.budget is not None:
         movie.budget = film.budget
-    if movie.revenue is not None:
+    if film.revenue is not None:
         movie.revenue = film.revenue
 
     await db.commit()
@@ -195,7 +204,6 @@ async def create_value_in_db_if_not_exists_and_return_none_if_exists(
         await db.commit()
         await db.refresh(new_value)
         return new_value
-
 
     elif isinstance(value_name, list):
         result = await db.execute(select(model).filter(model.name.in_(value_name)))

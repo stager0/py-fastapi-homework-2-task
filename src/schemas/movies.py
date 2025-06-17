@@ -19,8 +19,7 @@ class MovieBase(BaseModel):
     overview: str
 
     class Config:
-        from_attributes = True
-        from_orm=True
+        orm_mode = True
         json_encoders = {
             datetime: lambda v: v.strftime("%Y-%m-%d")
         }
@@ -38,7 +37,7 @@ class ItemGenre(BaseModel):
     name: str
 
     class Config:
-        from_attributes: True
+        orm_mode = True
 
 
 class ReadGenre(ItemGenre):
@@ -49,7 +48,7 @@ class ItemCountry(BaseModel):
     code: str
 
     class Config:
-        from_attributes: True
+        orm_mode = True
 
 
 class ReadCountry(ItemCountry):
@@ -60,7 +59,7 @@ class ItemActors(BaseModel):
     name: str
 
     class Config:
-        from_attributes: True
+        orm_mode = True
 
 
 class ReadActors(ItemActors):
@@ -71,7 +70,7 @@ class ItemLanguage(BaseModel):
     name: str
 
     class Config:
-        from_attributes: True
+        orm_mode = True
 
 
 class ReadLanguage(ItemLanguage):
@@ -119,8 +118,7 @@ class UpdateMovie(BaseModel):
     revenue: Optional[float] = None
 
     class Config:
-        from_attributes=True
-        from_orm=True
+        orm_mode = True
         json_encoders = {
             datetime: lambda value: value.strftime("%Y-%m-%d")
         }
