@@ -76,7 +76,6 @@ class ItemLanguage(BaseModel):
 
 class ReadLanguage(ItemLanguage):
     id: int
-    name: str
 
 
 class CreateMovie(BaseModel):

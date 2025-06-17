@@ -134,7 +134,7 @@ async def get_film_by_id(movie_id: int, db: AsyncSession = Depends(get_db)):
 async def delete_film(movie_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(MovieModel).where(MovieModel.id == movie_id))
     film_to_delete = result.scalar_one_or_none()
-    if not film:
+    if not film_to_delete:
         return None
     await db.delete(film_to_delete)
     await db.commit()
@@ -150,10 +150,10 @@ async def update_movie(movie_id: int, film: UpdateMovie, db: AsyncSession = Depe
     revenue_validate = True if film.revenue >= 0 else False
 
     if not movie:
-        return HTTPException(status_code=404, detail="Movie with the given ID was not found.")
+        raise HTTPException(status_code=404, detail="Movie with the given ID was not found.")
 
     if not film or not score_validate or not budget_validate or not revenue_validate:
-        return HTTPException(status_code=400, detail="Invalid input data.")
+        raise HTTPException(status_code=400, detail="Invalid input data.")
 
     if movie.name is not None:
         movie.name = film.name
@@ -203,18 +203,24 @@ async def create_value_in_db_if_not_exists_and_return_none_if_exists(
         existing_values = {getattr(inst, "name") for inst in values}
 
         new_instances = []
+        existing_instances = []
+
         for name in value_name:
             if name not in existing_values:
                 new_value = model(name=name)
                 db.add(new_value)
                 new_instances.append(new_value)
+            else:
+                for inst in values:
+                    if inst.name == name:
+                        existing_instances.append(inst)
 
         if new_instances:
             await db.commit()
             for created_value in new_instances:
                 await db.refresh(created_value)
 
-        return list(existing_values) + new_instances
+        return new_instances + existing_instances
 
     return None
 
