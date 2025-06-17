@@ -21,6 +21,7 @@ alembic = "^1.14.0"
 aiosqlite = "^0.21.0"
 asyncpg = "^0.30.0"
 pytest-asyncio = "^0.25.3"
+pycountry = "^24.6.1"
 
 
 [build-system]
